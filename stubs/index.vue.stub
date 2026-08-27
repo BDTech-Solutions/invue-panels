@@ -1,0 +1,32 @@
+<script setup>
+import { %%TABLE_IMPORTS%% } from 'invue/tables'
+import { useInvueTable } from 'invue/tables'
+import { PanelLayout } from 'invue/panels'
+import { Link } from '@inertiajs/vue3'
+
+const table = useInvueTable('%%TABLE_PROP%%')
+</script>
+
+<template>
+    <PanelLayout>
+        <div class="mb-6 flex items-center justify-between">
+            <h1 class="text-xl font-semibold text-gray-900">%%NAVIGATION_LABEL%%</h1>
+            <Link
+                :href="route('%%CREATE_ROUTE_NAME%%')"
+                class="rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-green-500"
+            >
+                New %%MODEL_LABEL%%
+            </Link>
+        </div>
+
+        <Table :table="table" searchable>
+%%TABLE_COLUMNS%%
+            <TextColumn
+                field="%%PRIMARY_KEY%%"
+                label="Actions"
+                :url="(value, row) => route('%%EDIT_ROUTE_NAME%%', row.%%PRIMARY_KEY%%)"
+                :format-using="() => 'Edit'"
+            />
+        </Table>
+    </PanelLayout>
+</template>

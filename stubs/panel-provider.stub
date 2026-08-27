@@ -1,0 +1,16 @@
+<?php
+
+namespace App\Providers;
+
+use Invue\Panels\Panel;
+use Invue\Panels\PanelProvider;
+
+class {{ class }} extends PanelProvider
+{
+    public function panel(): Panel
+    {
+        return Panel::make('{{ id }}')
+            ->path('{{ path }}')
+            ->middleware(['web', 'auth']);
+    }
+}

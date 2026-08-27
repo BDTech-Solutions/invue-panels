@@ -1,0 +1,40 @@
+<script setup>
+import { useForm } from '@inertiajs/vue3'
+import { %%FORM_IMPORTS%%, useInvueField } from 'invue/forms'
+import { PanelLayout } from 'invue/panels'
+
+const props = defineProps({
+    %%MODEL_VARIABLE%%: {
+        type: Object,
+        required: true,
+    },
+})
+
+const form = useForm({
+%%FORM_INITIAL_FROM_MODEL%%
+})
+
+%%FORM_FIELD_BINDINGS%%
+
+function submit() {
+    form.put(route('%%UPDATE_ROUTE_NAME%%', props.%%MODEL_VARIABLE%%.%%PRIMARY_KEY%%))
+}
+</script>
+
+<template>
+    <PanelLayout>
+        <h1 class="mb-6 text-xl font-semibold text-gray-900">Edit %%MODEL_LABEL%%</h1>
+
+        <form class="max-w-lg space-y-4" novalidate @submit.prevent="submit">
+%%FORM_FIELDS%%
+
+            <button
+                type="submit"
+                class="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500"
+                :disabled="form.processing"
+            >
+                Save
+            </button>
+        </form>
+    </PanelLayout>
+</template>

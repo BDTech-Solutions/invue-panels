@@ -1,0 +1,11 @@
+<?php
+
+namespace {{ resourceNamespace }};
+
+use {{ modelFqcn }};
+use Invue\Panels\Resource;
+
+class {{ resourceClass }} extends Resource
+{
+    protected static string $model = {{ modelClass }}::class;
+}
