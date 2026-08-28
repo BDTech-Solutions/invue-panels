@@ -1,6 +1,7 @@
 <script setup>
-import { computed } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import { computed, inject } from 'vue'
+import { router, usePage } from '@inertiajs/vue3'
+import { InvueRegistryKey } from 'invue/core'
 
 // Same reasoning as Base/Sidebar.vue's ACTIVE_ITEM_CLASSES/WIDTH_CLASSES —
 // a color name resolved through a static map here, not an arbitrary
@@ -56,6 +57,21 @@ const props = defineProps({
         type: String,
         default: 'gray',
     },
+    // PanelLayout sets this to false — the brand now lives in Sidebar (see
+    // Base/Sidebar.vue), so the default panel composition doesn't show it
+    // twice. Still true by default so Topbar used on its own (no Sidebar
+    // alongside it) keeps working exactly as documented.
+    showBrand: {
+        type: Boolean,
+        default: true,
+    },
+    // Overrides '/logout' — the path invue:install's generated auth routes
+    // register by default (POST, name 'logout'). Only relevant when a real
+    // `auth.user` is shared (see `user` below); no route, no menu item.
+    logoutUrl: {
+        type: String,
+        default: '/logout',
+    },
 })
 
 const page = usePage()
@@ -87,6 +103,20 @@ const initials = computed(() => {
         ? (parts[0][0] + parts[1][0]).toUpperCase()
         : source.slice(0, 2).toUpperCase()
 })
+
+// invue/panels can't composer-depend on invue/notifications (wrong
+// direction — see the parent skill's "runtime capability detection"
+// mechanism), so it can't import Bell.vue directly either without breaking
+// the build for anyone who only installed panels. invue:install registers
+// it here instead (registry.register('panels.topbarBell', Bell)) when
+// invue/notifications is present, so the bell still shows up with zero
+// per-page wiring — resolving to null (nothing rendered) otherwise.
+const registry = inject(InvueRegistryKey, null)
+const TopbarBell = computed(() => registry?.resolve('panels.topbarBell', null) ?? null)
+
+function logout() {
+    router.post(props.logoutUrl)
+}
 </script>
 
 <template>
@@ -95,8 +125,10 @@ const initials = computed(() => {
         :class="ACCENT_BORDER_CLASSES[color] ?? ACCENT_BORDER_CLASSES.gray"
     >
         <!-- #brand replaces the logo+name block entirely; the default
-             here covers the common "just a name/logo/badge" case. -->
-        <slot name="brand">
+             here covers the common "just a name/logo/badge" case.
+             show-brand="false" (PanelLayout's default) skips this whole
+             block, brand and all — see the `showBrand` prop above. -->
+        <slot v-if="showBrand" name="brand">
             <div class="flex shrink-0 items-center gap-2 text-base font-semibold text-gray-900">
                 <img v-if="logoUrl" :src="logoUrl" alt="" class="h-6 w-6 rounded" />
                 <span>{{ name }}</span>
@@ -120,13 +152,35 @@ const initials = computed(() => {
 
         <div class="flex shrink-0 items-center gap-3">
             <slot />
-            <div
-                v-if="user"
-                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-800 text-xs font-semibold text-white"
-                :title="user.name ?? user.email"
-            >
-                {{ initials }}
-            </div>
+
+            <component :is="TopbarBell" v-if="TopbarBell" />
+
+            <!-- Native <details>/<summary> disclosure, same interaction
+                 pattern as invue/notifications' Bell.vue — no extra JS
+                 state needed for a dropdown this simple. -->
+            <details v-if="user" class="relative">
+                <summary
+                    class="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-full bg-gray-800 text-xs font-semibold text-white select-none"
+                    :title="user.name ?? user.email"
+                >
+                    {{ initials }}
+                </summary>
+
+                <div class="absolute right-0 z-10 mt-1 w-48 overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
+                    <div class="border-b border-gray-100 px-3 py-2">
+                        <p class="truncate text-sm font-medium text-gray-900">{{ user.name ?? user.email }}</p>
+                        <p v-if="user.name" class="truncate text-xs text-gray-500">{{ user.email }}</p>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="block w-full px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50"
+                        @click="logout"
+                    >
+                        Log out
+                    </button>
+                </div>
+            </details>
         </div>
     </header>
 </template>

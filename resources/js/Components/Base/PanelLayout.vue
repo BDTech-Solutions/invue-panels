@@ -12,7 +12,9 @@ import Topbar from '../Topbar.vue'
         <Sidebar />
 
         <div class="flex flex-1 flex-col">
-            <Topbar>
+            <!-- Brand lives in Sidebar, not here — see its `showBrand`
+                 prop on Topbar for why. -->
+            <Topbar :show-brand="false">
                 <slot name="topbar" />
             </Topbar>
 

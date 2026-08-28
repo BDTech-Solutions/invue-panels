@@ -62,11 +62,29 @@ const props = defineProps({
         type: String,
         default: 'md',
     },
+    // Overrides page.props.invuePanel.brandName/brandLogoUrl — same
+    // standalone-mode reasoning as `items`. The brand lives here, not in
+    // Topbar (PanelLayout renders Topbar with :show-brand="false") — matches
+    // Filament's own layout, where the logo/app name pins to the sidebar.
+    brandName: {
+        type: String,
+        default: null,
+    },
+    brandLogoUrl: {
+        type: String,
+        default: null,
+    },
 })
 
 const page = usePage()
 
 const navigation = computed(() => props.items ?? page.props.invuePanel?.navigation ?? [])
+
+const panel = computed(() => page.props.invuePanel ?? null)
+// import.meta.env.VITE_APP_NAME, not a hardcoded string — see Topbar.vue's
+// identical fallback chain for why (every Laravel .env already has this).
+const brandName = computed(() => props.brandName ?? panel.value?.brandName ?? import.meta.env.VITE_APP_NAME ?? 'Laravel')
+const brandLogoUrl = computed(() => props.brandLogoUrl ?? panel.value?.brandLogoUrl ?? null)
 
 // Groups items by their (optional) `group` field, preserving first-seen
 // order — an item with no group renders flat, exactly like before this
@@ -102,6 +120,13 @@ function isActive(url) {
         class="invue-sidebar flex shrink-0 flex-col border-r border-gray-200 bg-white"
         :class="WIDTH_CLASSES[width] ?? WIDTH_CLASSES.md"
     >
+        <div class="flex h-14 shrink-0 items-center gap-2 border-b border-gray-200 px-4 text-base font-semibold text-gray-900">
+            <slot name="brand">
+                <img v-if="brandLogoUrl" :src="brandLogoUrl" alt="" class="h-6 w-6 rounded" />
+                <span class="truncate">{{ brandName }}</span>
+            </slot>
+        </div>
+
         <div v-if="$slots.header" class="border-b border-gray-200 px-4 py-3">
             <slot name="header" />
         </div>
