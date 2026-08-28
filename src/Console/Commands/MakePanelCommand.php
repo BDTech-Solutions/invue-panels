@@ -41,15 +41,41 @@ class MakePanelCommand extends Command
         $files->put($providerPath, $stub);
 
         $this->registerProvider($files, "App\\Providers\\{$class}");
+        $this->writeDashboardPage($files, $name, $id);
 
         $this->components->info("Invue panel provider created: app/Providers/{$class}.php");
         $this->line('');
         $this->line("  Panel id: <comment>{$id}</comment>   URL prefix: <comment>/{$path}</comment>");
         $this->line('');
+        $this->line("Visit /{$path} once you're logged in — the panel is live now, dashboard included.");
+        $this->line('');
         $this->line('Add a Resource to this panel with:');
         $this->line("  <fg=green>php artisan make:invue-resource</> <ModelName> <fg=gray>--panel={$id}</>");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Matches Panel::getPagesDirectory()'s own default convention
+     * (resources/js/Pages/Invue/{StudlyId}) — registerRoutes() always
+     * wires a `/` route rendering this page now, even with zero
+     * Resources yet, so a fresh panel is reachable immediately instead
+     * of 404ing until the first make:invue-resource run.
+     */
+    protected function writeDashboardPage(Filesystem $files, string $name, string $id): void
+    {
+        $path = resource_path("js/Pages/Invue/{$name}/Dashboard.vue");
+
+        if ($files->exists($path)) {
+            return;
+        }
+
+        $stub = strtr($files->get(__DIR__.'/../../../stubs/dashboard.vue.stub'), [
+            '{{ id }}' => $id,
+        ]);
+
+        $files->ensureDirectoryExists(dirname($path));
+        $files->put($path, $stub);
     }
 
     protected function registerProvider(Filesystem $files, string $providerClass): void

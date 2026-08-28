@@ -90,7 +90,7 @@ class Panel
 
     public function getBrandName(): string
     {
-        return $this->brandName ?? Str::headline($this->id);
+        return $this->brandName ?? config('app.name') ?? Str::headline($this->id);
     }
 
     public function brandLogoUrl(string $url): static

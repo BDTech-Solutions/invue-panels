@@ -61,8 +61,32 @@ const props = defineProps({
 const page = usePage()
 
 const panel = computed(() => page.props.invuePanel ?? null)
-const name = computed(() => props.brandName ?? panel.value?.brandName ?? 'Invue')
+// import.meta.env.VITE_APP_NAME, not a hardcoded 'Invue' — every Laravel
+// .env ships APP_NAME/VITE_APP_NAME already, so a fresh install shows the
+// app's own name by default instead of the framework's, the same
+// impression a fresh Filament install gives (see Panel::getBrandName()
+// for the equivalent server-side default, used once a real Panel backs
+// this route).
+const name = computed(() => props.brandName ?? panel.value?.brandName ?? import.meta.env.VITE_APP_NAME ?? 'Laravel')
 const logoUrl = computed(() => props.brandLogoUrl ?? panel.value?.brandLogoUrl ?? null)
+
+// Breeze/Jetstream's own convention (HandleInertiaRequests::share()
+// returning 'auth' => ['user' => ...]) — read directly if the app already
+// shares it that way, no invue/panels-specific wiring needed on top.
+const user = computed(() => page.props.auth?.user ?? null)
+const initials = computed(() => {
+    const source = (user.value?.name || user.value?.email || '').trim()
+
+    if (! source) {
+        return null
+    }
+
+    const parts = source.split(/\s+/).filter(Boolean)
+
+    return parts.length >= 2
+        ? (parts[0][0] + parts[1][0]).toUpperCase()
+        : source.slice(0, 2).toUpperCase()
+})
 </script>
 
 <template>
@@ -96,6 +120,13 @@ const logoUrl = computed(() => props.brandLogoUrl ?? panel.value?.brandLogoUrl ?
 
         <div class="flex shrink-0 items-center gap-3">
             <slot />
+            <div
+                v-if="user"
+                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-800 text-xs font-semibold text-white"
+                :title="user.name ?? user.email"
+            >
+                {{ initials }}
+            </div>
         </div>
     </header>
 </template>

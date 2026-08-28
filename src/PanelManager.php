@@ -3,6 +3,7 @@
 namespace Invue\Panels;
 
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 use RuntimeException;
 
 /**
@@ -110,7 +111,16 @@ class PanelManager
      */
     public function navigationFor(Panel $panel): array
     {
-        return array_map(
+        $dashboard = [
+            'label' => 'Dashboard',
+            'icon' => 'layout-dashboard',
+            'group' => null,
+            'url' => '/'.trim($panel->getPath(), '/'),
+            'badge' => null,
+            'badgeColor' => 'gray',
+        ];
+
+        $resources = array_map(
             fn (string $resource) => [
                 'label' => $resource::getNavigationLabel(),
                 'icon' => $resource::getNavigationIcon(),
@@ -121,20 +131,28 @@ class PanelManager
             ],
             $this->discoverResources($panel),
         );
+
+        return [$dashboard, ...$resources];
     }
 
+    /**
+     * Always registers the route group — a panel with zero Resources yet
+     * still gets a real, working Dashboard at its own root path
+     * (make:invue-panel generates the matching page). Matches a fresh
+     * Filament panel: reachable and branded immediately, not only once a
+     * Resource happens to exist. See the common-sense skill.
+     */
     public function registerRoutes(Panel $panel): void
     {
         $resources = $this->discoverResources($panel);
-
-        if ($resources === []) {
-            return;
-        }
 
         Route::middleware([...$panel->getMiddleware(), Http\Middleware\ShareInvuePanelData::class])
             ->prefix($panel->getPath())
             ->name($panel->getRouteNamePrefix())
             ->group(function () use ($resources, $panel): void {
+                Route::get('/', fn () => Inertia::render($panel->getPagesNamespace().'/Dashboard'))
+                    ->name('dashboard');
+
                 foreach ($resources as $resource) {
                     Route::resource($resource::getSlug(), $resource::getControllerClass($panel))
                         ->except('show');
