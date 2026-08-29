@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Invue\Notifications\NotificationsServiceProvider;
 use Invue\Panels\Console\Support\ColumnInference;
 use Invue\Panels\Console\Support\FieldDescriptor;
 use Invue\Panels\Console\Support\FieldRenderer;
@@ -217,10 +218,24 @@ class MakeResourceCommand extends Command
             ? 'created_at'
             : ($fields[0]->name ?? $modelInstance->getKeyName());
 
+        // invue/panels can't composer-depend on invue/notifications (wrong
+        // direction), so this only sends a notification when the package
+        // is actually installed — same runtime-detection posture as the
+        // login page. Filament's own scaffolded resources send a success
+        // notification after every create/update/delete by default; this
+        // closes that same gap for Invue.
+        $modelLabel = Str::headline($modelBasename);
+        $hasNotifications = class_exists(NotificationsServiceProvider::class);
+
+        $notificationCall = fn (string $message) => $hasNotifications
+            ? "        Notification::make()\n            ->title('{$message}')\n            ->success()\n            ->send();\n"
+            : '';
+
         $stub = strtr($this->stub('controller'), [
             '{{ controllersNamespace }}' => $panel->getControllersNamespace(),
             '{{ modelUse }}' => "use {$data['modelClass']};",
             '{{ requestUse }}' => "use {$data['requestsNamespace']}\\{$data['requestClass']};",
+            '{{ notificationUse }}' => $hasNotifications ? "use Invue\\Notifications\\Notification;\n" : '',
             '{{ controllerClass }}' => $data['controllerClass'],
             '{{ modelClass }}' => $modelBasename,
             '{{ requestClass }}' => $data['requestClass'],
@@ -231,6 +246,9 @@ class MakeResourceCommand extends Command
             '{{ searchableColumns }}' => $this->quotedList(array_map(fn ($f) => $f->name, $searchable)),
             '{{ sortableColumns }}' => $this->quotedList(array_map(fn ($f) => $f->name, $sortable)),
             '{{ defaultSortColumn }}' => $defaultSort,
+            '{{ createdNotification }}' => $notificationCall("{$modelLabel} created"),
+            '{{ updatedNotification }}' => $notificationCall("{$modelLabel} updated"),
+            '{{ deletedNotification }}' => $notificationCall("{$modelLabel} deleted"),
         ]);
 
         $this->put($path, $stub);

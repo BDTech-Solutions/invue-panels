@@ -5,7 +5,7 @@ namespace {{ controllersNamespace }};
 use App\Http\Controllers\Controller;
 {{ modelUse }}
 {{ requestUse }}
-use Illuminate\Http\RedirectResponse;
+{{ notificationUse }}use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -32,7 +32,7 @@ class {{ controllerClass }} extends Controller
     public function store({{ requestClass }} $request): RedirectResponse
     {
         {{ modelClass }}::create($request->validated());
-
+{{ createdNotification }}
         return to_route('{{ indexRouteName }}');
     }
 
@@ -46,14 +46,14 @@ class {{ controllerClass }} extends Controller
     public function update({{ requestClass }} $request, {{ modelClass }} ${{ modelVariable }}): RedirectResponse
     {
         ${{ modelVariable }}->update($request->validated());
-
+{{ updatedNotification }}
         return to_route('{{ indexRouteName }}');
     }
 
     public function destroy({{ modelClass }} ${{ modelVariable }}): RedirectResponse
     {
         ${{ modelVariable }}->delete();
-
+{{ deletedNotification }}
         return to_route('{{ indexRouteName }}');
     }
 }
