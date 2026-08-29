@@ -108,10 +108,29 @@ const groupedNavigation = computed(() => {
     return buckets
 })
 
-function isActive(url) {
+// Picks the single BEST (longest) matching nav url for the current path,
+// not "every item whose url happens to be a prefix" — the Dashboard's own
+// url is the panel root (e.g. '/admin'), which is a prefix of every other
+// item's url in the same panel, so a naive startsWith() marked Dashboard
+// active on every resource page too. Only the most specific match wins.
+const activeUrl = computed(() => {
     const current = page.props.invuePanel?.current ?? (typeof window !== 'undefined' ? window.location.pathname : '')
 
-    return current === url || current.startsWith(`${url}/`)
+    let best = null
+
+    for (const item of navigation.value) {
+        if (current === item.url || current.startsWith(`${item.url}/`)) {
+            if (best === null || item.url.length > best.length) {
+                best = item.url
+            }
+        }
+    }
+
+    return best
+})
+
+function isActive(url) {
+    return url === activeUrl.value
 }
 </script>
 
