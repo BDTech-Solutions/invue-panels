@@ -21,11 +21,23 @@ const table = useInvueTable('%%TABLE_PROP%%')
 
         <Table :table="table" searchable>
 %%TABLE_COLUMNS%%
-            <TextColumn
-                field="%%PRIMARY_KEY%%"
+            <ActionsColumn
                 label="Actions"
-                :url="(value, row) => `%%EDIT_URL_BASE%%/${row.%%PRIMARY_KEY%%}/edit`"
-                :format-using="() => 'Edit'"
+                align="end"
+                :actions="(row) => [
+                    { label: 'Edit', icon: 'pencil', url: `%%EDIT_URL_BASE%%/${row.%%PRIMARY_KEY%%}/edit` },
+                    {
+                        label: 'Delete',
+                        icon: 'trash',
+                        color: 'red',
+                        url: `%%EDIT_URL_BASE%%/${row.%%PRIMARY_KEY%%}`,
+                        method: 'delete',
+                        requiresConfirmation: true,
+                        confirmationTitle: 'Delete %%MODEL_LABEL%%?',
+                        confirmationText: 'This action cannot be undone.',
+                        confirmationButtonLabel: 'Delete',
+                    },
+                ]"
             />
         </Table>
     </PanelLayout>

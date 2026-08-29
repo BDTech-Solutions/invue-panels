@@ -243,7 +243,7 @@ class MakeResourceCommand extends Command
     {
         $fields = $data['fields'];
 
-        $tableImports = array_unique(array_merge(['Table', 'TextColumn'], array_map(FieldRenderer::tableColumnImport(...), $fields)));
+        $tableImports = array_unique(array_merge(['Table', 'TextColumn', 'ActionsColumn'], array_map(FieldRenderer::tableColumnImport(...), $fields)));
         $tableColumns = implode("\n", array_map(fn ($f) => '            '.FieldRenderer::tableColumn($f), $fields));
 
         $stub = strtr($this->stub('index.vue'), [
