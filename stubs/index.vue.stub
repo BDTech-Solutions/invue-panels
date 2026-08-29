@@ -24,6 +24,7 @@ const table = useInvueTable('%%TABLE_PROP%%')
             <ActionsColumn
                 label="Actions"
                 align="end"
+                trigger="inline"
                 :actions="(row) => [
                     { label: 'Edit', icon: 'pencil', url: `%%EDIT_URL_BASE%%/${row.%%PRIMARY_KEY%%}/edit` },
                     {
