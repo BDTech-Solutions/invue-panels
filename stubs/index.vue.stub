@@ -12,7 +12,7 @@ const table = useInvueTable('%%TABLE_PROP%%')
         <div class="mb-6 flex items-center justify-between">
             <h1 class="text-xl font-semibold text-gray-900">%%NAVIGATION_LABEL%%</h1>
             <Link
-                :href="route('%%CREATE_ROUTE_NAME%%')"
+                href="%%CREATE_URL%%"
                 class="rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-green-500"
             >
                 New %%MODEL_LABEL%%
@@ -24,7 +24,7 @@ const table = useInvueTable('%%TABLE_PROP%%')
             <TextColumn
                 field="%%PRIMARY_KEY%%"
                 label="Actions"
-                :url="(value, row) => route('%%EDIT_ROUTE_NAME%%', row.%%PRIMARY_KEY%%)"
+                :url="(value, row) => `%%EDIT_URL_BASE%%/${row.%%PRIMARY_KEY%%}/edit`"
                 :format-using="() => 'Edit'"
             />
         </Table>

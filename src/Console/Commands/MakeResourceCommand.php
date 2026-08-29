@@ -64,6 +64,12 @@ class MakeResourceCommand extends Command
         $modelVariable = Str::camel(Str::singular($modelBasename));
         $pageBase = $panel->getPagesNamespace().'/'.$pluralStudly;
         $routeNamePrefix = $panel->getRouteNamePrefix().$slug;
+        // Plain URLs for the generated Vue pages, not named-route lookups —
+        // the client has no Ziggy/Wayfinder wired by default (invue:install
+        // never installs either), so a client-side route('name') call would
+        // throw at runtime. The controller stub still uses real route names
+        // via to_route() — that's server-side, unaffected.
+        $baseUrl = '/'.trim($panel->getPath(), '/').'/'.$slug;
 
         $targets = [
             'resource' => $panel->getResourcesDirectory()."/{$resourceClass}.php",
@@ -104,21 +110,21 @@ class MakeResourceCommand extends Command
             'tableProp' => $tableProp,
             'navigationLabel' => Str::plural(Str::headline($modelBasename)),
             'modelLabel' => Str::headline($modelBasename),
-            'createRouteName' => "{$routeNamePrefix}.create",
-            'editRouteName' => "{$routeNamePrefix}.edit",
+            'createUrl' => "{$baseUrl}/create",
+            'editUrlBase' => $baseUrl,
             'primaryKey' => $model->getKeyName(),
             'fields' => $fields,
         ]);
         $this->writeCreatePage($targets['create'], [
             'modelLabel' => Str::headline($modelBasename),
-            'storeRouteName' => "{$routeNamePrefix}.store",
+            'storeUrl' => $baseUrl,
             'fields' => $fields,
         ]);
         $this->writeEditPage($targets['edit'], [
             'modelLabel' => Str::headline($modelBasename),
             'modelVariable' => $modelVariable,
             'primaryKey' => $model->getKeyName(),
-            'updateRouteName' => "{$routeNamePrefix}.update",
+            'updateUrlBase' => $baseUrl,
             'fields' => $fields,
         ]);
 
@@ -231,7 +237,7 @@ class MakeResourceCommand extends Command
     }
 
     /**
-     * @param  array{tableProp: string, navigationLabel: string, modelLabel: string, createRouteName: string, editRouteName: string, primaryKey: string, fields: list<FieldDescriptor>}  $data
+     * @param  array{tableProp: string, navigationLabel: string, modelLabel: string, createUrl: string, editUrlBase: string, primaryKey: string, fields: list<FieldDescriptor>}  $data
      */
     protected function writeIndexPage(string $path, array $data): void
     {
@@ -244,8 +250,8 @@ class MakeResourceCommand extends Command
             '%%TABLE_IMPORTS%%' => implode(', ', $tableImports),
             '%%TABLE_PROP%%' => $data['tableProp'],
             '%%NAVIGATION_LABEL%%' => $data['navigationLabel'],
-            '%%CREATE_ROUTE_NAME%%' => $data['createRouteName'],
-            '%%EDIT_ROUTE_NAME%%' => $data['editRouteName'],
+            '%%CREATE_URL%%' => $data['createUrl'],
+            '%%EDIT_URL_BASE%%' => $data['editUrlBase'],
             '%%MODEL_LABEL%%' => $data['modelLabel'],
             '%%PRIMARY_KEY%%' => $data['primaryKey'],
             '%%TABLE_COLUMNS%%' => $tableColumns,
@@ -255,7 +261,7 @@ class MakeResourceCommand extends Command
     }
 
     /**
-     * @param  array{modelLabel: string, storeRouteName: string, fields: list<FieldDescriptor>}  $data
+     * @param  array{modelLabel: string, storeUrl: string, fields: list<FieldDescriptor>}  $data
      */
     protected function writeCreatePage(string $path, array $data): void
     {
@@ -264,7 +270,7 @@ class MakeResourceCommand extends Command
         $stub = strtr($this->stub('create.vue'), [
             '%%FORM_IMPORTS%%' => implode(', ', array_unique(array_map(FieldRenderer::formFieldImport(...), $fields))),
             '%%MODEL_LABEL%%' => $data['modelLabel'],
-            '%%STORE_ROUTE_NAME%%' => $data['storeRouteName'],
+            '%%STORE_URL%%' => $data['storeUrl'],
             '%%FORM_INITIAL%%' => implode("\n", array_map(fn ($f) => "    {$f->name}: ".FieldRenderer::defaultValue($f).',', $fields)),
             '%%FORM_FIELD_BINDINGS%%' => $this->fieldBindings($fields),
             '%%FORM_FIELDS%%' => implode("\n", array_map(fn ($f) => '            '.FieldRenderer::formField($f), $fields)),
@@ -274,7 +280,7 @@ class MakeResourceCommand extends Command
     }
 
     /**
-     * @param  array{modelLabel: string, modelVariable: string, primaryKey: string, updateRouteName: string, fields: list<FieldDescriptor>}  $data
+     * @param  array{modelLabel: string, modelVariable: string, primaryKey: string, updateUrlBase: string, fields: list<FieldDescriptor>}  $data
      */
     protected function writeEditPage(string $path, array $data): void
     {
@@ -286,7 +292,7 @@ class MakeResourceCommand extends Command
             '%%MODEL_LABEL%%' => $data['modelLabel'],
             '%%MODEL_VARIABLE%%' => $modelVariable,
             '%%PRIMARY_KEY%%' => $data['primaryKey'],
-            '%%UPDATE_ROUTE_NAME%%' => $data['updateRouteName'],
+            '%%UPDATE_URL_BASE%%' => $data['updateUrlBase'],
             '%%FORM_INITIAL_FROM_MODEL%%' => implode("\n", array_map(fn ($f) => "    {$f->name}: props.{$modelVariable}.{$f->name},", $fields)),
             '%%FORM_FIELD_BINDINGS%%' => $this->fieldBindings($fields),
             '%%FORM_FIELDS%%' => implode("\n", array_map(fn ($f) => '            '.FieldRenderer::formField($f), $fields)),

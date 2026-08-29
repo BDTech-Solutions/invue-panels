@@ -10,7 +10,7 @@ const form = useForm({
 %%FORM_FIELD_BINDINGS%%
 
 function submit() {
-    form.post(route('%%STORE_ROUTE_NAME%%'))
+    form.post('%%STORE_URL%%')
 }
 </script>
 
