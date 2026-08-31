@@ -118,11 +118,15 @@ class MakeResourceCommand extends Command
         ]);
         $this->writeCreatePage($targets['create'], [
             'modelLabel' => Str::headline($modelBasename),
+            'navigationLabel' => Str::plural(Str::headline($modelBasename)),
+            'indexUrl' => $baseUrl,
             'storeUrl' => $baseUrl,
             'fields' => $fields,
         ]);
         $this->writeEditPage($targets['edit'], [
             'modelLabel' => Str::headline($modelBasename),
+            'navigationLabel' => Str::plural(Str::headline($modelBasename)),
+            'indexUrl' => $baseUrl,
             'modelVariable' => $modelVariable,
             'primaryKey' => $model->getKeyName(),
             'updateUrlBase' => $baseUrl,
@@ -279,7 +283,7 @@ class MakeResourceCommand extends Command
     }
 
     /**
-     * @param  array{modelLabel: string, storeUrl: string, fields: list<FieldDescriptor>}  $data
+     * @param  array{modelLabel: string, navigationLabel: string, indexUrl: string, storeUrl: string, fields: list<FieldDescriptor>}  $data
      */
     protected function writeCreatePage(string $path, array $data): void
     {
@@ -288,6 +292,8 @@ class MakeResourceCommand extends Command
         $stub = strtr($this->stub('create.vue'), [
             '%%FORM_IMPORTS%%' => implode(', ', array_unique(array_map(FieldRenderer::formFieldImport(...), $fields))),
             '%%MODEL_LABEL%%' => $data['modelLabel'],
+            '%%NAVIGATION_LABEL%%' => $data['navigationLabel'],
+            '%%INDEX_URL%%' => $data['indexUrl'],
             '%%STORE_URL%%' => $data['storeUrl'],
             '%%FORM_INITIAL%%' => implode("\n", array_map(fn ($f) => "    {$f->name}: ".FieldRenderer::defaultValue($f).',', $fields)),
             '%%FORM_FIELD_BINDINGS%%' => $this->fieldBindings($fields),
@@ -298,7 +304,7 @@ class MakeResourceCommand extends Command
     }
 
     /**
-     * @param  array{modelLabel: string, modelVariable: string, primaryKey: string, updateUrlBase: string, fields: list<FieldDescriptor>}  $data
+     * @param  array{modelLabel: string, navigationLabel: string, indexUrl: string, modelVariable: string, primaryKey: string, updateUrlBase: string, fields: list<FieldDescriptor>}  $data
      */
     protected function writeEditPage(string $path, array $data): void
     {
@@ -308,6 +314,8 @@ class MakeResourceCommand extends Command
         $stub = strtr($this->stub('edit.vue'), [
             '%%FORM_IMPORTS%%' => implode(', ', array_unique(array_map(FieldRenderer::formFieldImport(...), $fields))),
             '%%MODEL_LABEL%%' => $data['modelLabel'],
+            '%%NAVIGATION_LABEL%%' => $data['navigationLabel'],
+            '%%INDEX_URL%%' => $data['indexUrl'],
             '%%MODEL_VARIABLE%%' => $modelVariable,
             '%%PRIMARY_KEY%%' => $data['primaryKey'],
             '%%UPDATE_URL_BASE%%' => $data['updateUrlBase'],

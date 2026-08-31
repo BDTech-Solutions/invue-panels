@@ -7,6 +7,7 @@ import { InvueRegistryKey } from 'invue/core'
 // invue/forms' KeyValue composing Repeater/TextInput via their wrappers.
 import Sidebar from '../Sidebar.vue'
 import Topbar from '../Topbar.vue'
+import Breadcrumbs from '../Breadcrumbs.vue'
 
 // Same reasoning as Topbar's `panels.topbarBell` — invue/panels can't
 // composer-depend on invue/notifications, so it resolves the toast
@@ -19,6 +20,17 @@ import Topbar from '../Topbar.vue'
 // make:invue-resource's generated Controller now sends by default.
 const registry = inject(InvueRegistryKey, null)
 const NotificationsContainer = computed(() => registry?.resolve('panels.notificationsContainer', null) ?? null)
+
+defineProps({
+    // { label, url? }[] — rendered into Topbar's #start slot. null/empty
+    // (the default) renders nothing, e.g. on Index pages and custom Pages
+    // that don't pass one. make:invue-resource's Create/Edit stubs pass
+    // this by default, no manual wiring needed.
+    breadcrumbs: {
+        type: Array,
+        default: null,
+    },
+})
 </script>
 
 <template>
@@ -29,6 +41,10 @@ const NotificationsContainer = computed(() => registry?.resolve('panels.notifica
             <!-- Brand lives in Sidebar, not here — see its `showBrand`
                  prop on Topbar for why. -->
             <Topbar :show-brand="false">
+                <template v-if="breadcrumbs && breadcrumbs.length" #start>
+                    <Breadcrumbs :items="breadcrumbs" />
+                </template>
+
                 <slot name="topbar" />
             </Topbar>
 

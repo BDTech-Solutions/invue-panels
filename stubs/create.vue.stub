@@ -3,6 +3,11 @@ import { useForm } from '@inertiajs/vue3'
 import { %%FORM_IMPORTS%%, useInvueField } from 'invue/forms'
 import { PanelLayout } from 'invue/panels'
 
+const breadcrumbs = [
+    { label: '%%NAVIGATION_LABEL%%', url: '%%INDEX_URL%%' },
+    { label: 'Create' },
+]
+
 const form = useForm({
 %%FORM_INITIAL%%
 })
@@ -15,7 +20,7 @@ function submit() {
 </script>
 
 <template>
-    <PanelLayout>
+    <PanelLayout :breadcrumbs="breadcrumbs">
         <h1 class="mb-6 text-xl font-semibold text-gray-900">New %%MODEL_LABEL%%</h1>
 
         <form class="max-w-lg space-y-4" novalidate @submit.prevent="submit">

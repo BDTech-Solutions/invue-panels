@@ -1,4 +1,5 @@
 export { default as PanelLayout } from './Components/PanelLayout.vue'
 export { default as Sidebar } from './Components/Sidebar.vue'
 export { default as Topbar } from './Components/Topbar.vue'
+export { default as Breadcrumbs } from './Components/Breadcrumbs.vue'
 export { default as RelationManager } from './Components/RelationManager.vue'
