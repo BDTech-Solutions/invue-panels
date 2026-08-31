@@ -107,6 +107,36 @@ class PanelManager
     }
 
     /**
+     * @return list<class-string<Page>>
+     */
+    public function discoverPages(Panel $panel): array
+    {
+        $directory = $panel->getPageClassesDirectory();
+
+        if (! is_dir($directory)) {
+            return [];
+        }
+
+        $pages = [];
+
+        foreach (glob($directory.'/*Page.php') ?: [] as $file) {
+            $class = $panel->getPageClassesNamespace().'\\'.basename($file, '.php');
+
+            if (! class_exists($class)) {
+                throw new RuntimeException("Invue panel [{$panel->getId()}] found {$file} but class {$class} doesn't exist — check that its namespace and class name match its path.");
+            }
+
+            if (! is_subclass_of($class, Page::class)) {
+                throw new RuntimeException("Invue panel [{$panel->getId()}] found {$class} in its page classes directory, but it doesn't extend ".Page::class.'.');
+            }
+
+            $pages[] = $class;
+        }
+
+        return $pages;
+    }
+
+    /**
      * @return list<array{label: string, icon: ?string, group: ?string, url: string, badge: int|string|null, badgeColor: string}>
      */
     public function navigationFor(Panel $panel): array
@@ -132,7 +162,19 @@ class PanelManager
             $this->discoverResources($panel),
         );
 
-        return [$dashboard, ...$resources];
+        $pages = array_map(
+            fn (string $page) => [
+                'label' => $page::getNavigationLabel(),
+                'icon' => $page::getNavigationIcon(),
+                'group' => $page::getNavigationGroup(),
+                'url' => '/'.trim($panel->getPath(), '/').'/'.$page::getSlug(),
+                'badge' => $page::getNavigationBadge(),
+                'badgeColor' => $page::getNavigationBadgeColor(),
+            ],
+            $this->discoverPages($panel),
+        );
+
+        return [$dashboard, ...$resources, ...$pages];
     }
 
     /**
@@ -145,17 +187,23 @@ class PanelManager
     public function registerRoutes(Panel $panel): void
     {
         $resources = $this->discoverResources($panel);
+        $pages = $this->discoverPages($panel);
 
         Route::middleware([...$panel->getMiddleware(), Http\Middleware\ShareInvuePanelData::class])
             ->prefix($panel->getPath())
             ->name($panel->getRouteNamePrefix())
-            ->group(function () use ($resources, $panel): void {
+            ->group(function () use ($resources, $pages, $panel): void {
                 Route::get('/', fn () => Inertia::render($panel->getPagesNamespace().'/Dashboard'))
                     ->name('dashboard');
 
                 foreach ($resources as $resource) {
                     Route::resource($resource::getSlug(), $resource::getControllerClass($panel))
                         ->except('show');
+                }
+
+                foreach ($pages as $page) {
+                    Route::get($page::getSlug(), fn () => Inertia::render($page::getPageComponent($panel)))
+                        ->name($page::getSlug());
                 }
             });
     }

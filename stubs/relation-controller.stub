@@ -1,0 +1,28 @@
+<?php
+
+namespace {{ controllersNamespace }};
+
+use App\Http\Controllers\Controller;
+{{ parentModelUse }}
+{{ relatedModelUse }}
+{{ requestUse }}
+{{ notificationUse }}use Illuminate\Http\RedirectResponse;
+
+class {{ controllerClass }} extends Controller
+{
+    public function store({{ requestClass }} $request, {{ parentModelClass }} ${{ parentVariable }}): RedirectResponse
+    {
+        ${{ parentVariable }}->{{ relation }}()->create($request->validated());
+{{ createdNotification }}
+        return back();
+    }
+
+    public function destroy({{ parentModelClass }} ${{ parentVariable }}, {{ relatedModelClass }} ${{ relatedVariable }}): RedirectResponse
+    {
+        abort_unless(${{ relatedVariable }}->{{ foreignKey }} === ${{ parentVariable }}->{{ parentLocalKey }}, 404);
+
+        ${{ relatedVariable }}->delete();
+{{ deletedNotification }}
+        return back();
+    }
+}

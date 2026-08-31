@@ -1,0 +1,10 @@
+<?php
+
+namespace {{ pageNamespace }};
+
+use Invue\Panels\Page;
+
+class {{ pageClass }} extends Page
+{
+    protected static string $slug = '{{ slug }}';
+{{ iconLine }}}

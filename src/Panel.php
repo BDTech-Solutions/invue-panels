@@ -37,6 +37,10 @@ class Panel
 
     protected ?string $pagesNamespace = null;
 
+    protected ?string $pageClassesDirectory = null;
+
+    protected ?string $pageClassesNamespace = null;
+
     private function __construct(protected readonly string $id)
     {
         $this->path = Str::kebab($id);
@@ -203,6 +207,35 @@ class Panel
         $this->pagesNamespace = $namespace;
 
         return $this;
+    }
+
+    public function pageClassesDirectory(string $path): static
+    {
+        $this->pageClassesDirectory = $path;
+
+        return $this;
+    }
+
+    /**
+     * Where make:invue-page's generated {Name}Page.php classes live —
+     * distinct from getPagesDirectory(), which is the .vue side of the same
+     * feature. Mirrors getResourcesDirectory()'s own convention.
+     */
+    public function getPageClassesDirectory(): string
+    {
+        return $this->pageClassesDirectory ?? app_path('Invue/'.$this->studlyId().'/Pages');
+    }
+
+    public function pageClassesNamespace(string $namespace): static
+    {
+        $this->pageClassesNamespace = $namespace;
+
+        return $this;
+    }
+
+    public function getPageClassesNamespace(): string
+    {
+        return $this->pageClassesNamespace ?? 'App\\Invue\\'.$this->studlyId().'\\Pages';
     }
 
     public function getRouteNamePrefix(): string

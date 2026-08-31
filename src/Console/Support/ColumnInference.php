@@ -57,11 +57,22 @@ class ColumnInference
     protected static function kindFor(string $name, array $column): string
     {
         $type = strtolower($column['type_name'] ?? $column['type'] ?? '');
+        $fullType = strtolower($column['type'] ?? '');
 
         $looksBoolean = (bool) preg_match('/^(is_|has_|can_)/', $name)
             || in_array($name, ['active', 'published', 'enabled', 'verified', 'featured'], true);
 
-        if (in_array($type, ['boolean', 'bool', 'bit'], true) || ($type === 'tinyint' && $looksBoolean)) {
+        // 'tinyint(1)' — the display width, not just the bare type name — is
+        // the actual on-disk convention `$table->boolean()` produces on both
+        // MySQL and SQLite (Postgres has a real `boolean` type, already
+        // covered above). Checking it directly catches every boolean column
+        // regardless of its name; the name heuristic only remains as a
+        // fallback for a bare 'tinyint' with no width info at all.
+        if (
+            in_array($type, ['boolean', 'bool', 'bit'], true)
+            || $fullType === 'tinyint(1)'
+            || ($type === 'tinyint' && $looksBoolean)
+        ) {
             return 'boolean';
         }
 

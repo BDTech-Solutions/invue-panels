@@ -1,0 +1,9 @@
+<script setup>
+import { PanelLayout } from 'invue/panels'
+</script>
+
+<template>
+    <PanelLayout>
+        <h1 class="text-xl font-semibold text-gray-900">%%NAVIGATION_LABEL%%</h1>
+    </PanelLayout>
+</template>
