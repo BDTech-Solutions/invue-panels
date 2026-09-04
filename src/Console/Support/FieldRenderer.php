@@ -28,6 +28,34 @@ class FieldRenderer
         return $field->kind === 'boolean' ? 'IconColumn' : 'TextColumn';
     }
 
+    /**
+     * Same column components/formatting options as tableColumn() — an
+     * Infolist entry is deliberately not a different value-formatting
+     * story, just a different layout (see invue/infolists' own docs).
+     * Bound via an explicit `:row`, since there's no <Table> here to
+     * inject one; `sortable`/`searchable` are meaningless outside a
+     * table and are dropped.
+     */
+    public static function infolistEntry(FieldDescriptor $field, string $modelVariable): string
+    {
+        $column = match ($field->kind) {
+            'boolean' => sprintf('<IconColumn :row="%s" field="%s" boolean />', $modelVariable, $field->name),
+            'text' => sprintf('<TextColumn :row="%s" field="%s" />', $modelVariable, $field->name),
+            'date' => sprintf('<TextColumn :row="%s" field="%s" date="YYYY-MM-DD" />', $modelVariable, $field->name),
+            'datetime' => sprintf('<TextColumn :row="%s" field="%s" date-time="YYYY-MM-DD HH:mm" />', $modelVariable, $field->name),
+            'number' => sprintf('<TextColumn :row="%s" field="%s" numeric />', $modelVariable, $field->name),
+            'email' => sprintf('<TextColumn :row="%s" field="%s" copyable />', $modelVariable, $field->name),
+            default => sprintf('<TextColumn :row="%s" field="%s" />', $modelVariable, $field->name),
+        };
+
+        return sprintf("<Entry label=\"%s\">\n                    %s\n                </Entry>", $field->label, $column);
+    }
+
+    public static function infolistEntryImport(FieldDescriptor $field): string
+    {
+        return $field->kind === 'boolean' ? 'IconColumn' : 'TextColumn';
+    }
+
     public static function formField(FieldDescriptor $field): string
     {
         $camel = $field->camel();

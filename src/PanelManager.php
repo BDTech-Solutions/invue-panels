@@ -197,8 +197,15 @@ class PanelManager
                     ->name('dashboard');
 
                 foreach ($resources as $resource) {
-                    Route::resource($resource::getSlug(), $resource::getControllerClass($panel))
-                        ->except('show');
+                    $route = Route::resource($resource::getSlug(), $resource::getControllerClass($panel));
+
+                    // `show` only exists for a Resource whose Controller
+                    // actually has one — make:invue-resource --view is what
+                    // generates it. Every other Resource keeps the route
+                    // unreachable rather than 404ing on a missing method.
+                    if (! $resource::hasView()) {
+                        $route->except('show');
+                    }
                 }
 
                 foreach ($pages as $page) {

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Invue\Infolists\InfolistsServiceProvider;
 use Invue\Notifications\NotificationsServiceProvider;
 use Invue\Panels\Console\Support\ColumnInference;
 use Invue\Panels\Console\Support\FieldDescriptor;
@@ -21,6 +22,7 @@ class MakeResourceCommand extends Command
         {name : The resource name, e.g. Post — also the default model name}
         {--panel= : The panel id to generate into (defaults to the only registered panel)}
         {--model= : The model class, if it differs from {name} — a bare name resolves under App\Models, or pass a fully-qualified class}
+        {--view : Also generate a read-only Show (Infolist) page — requires invue/infolists}
         {--force : Overwrite files that already exist}';
 
     protected $description = 'Scaffold a full Invue CRUD resource (Resource, Controller, FormRequest, Vue pages) from an already-migrated model table';
@@ -54,6 +56,7 @@ class MakeResourceCommand extends Command
         }
 
         $fields = ColumnInference::forTable($table, $model->getKeyName());
+        $wantsView = $this->resolveWantsView();
 
         $modelBasename = class_basename($modelClass);
         $resourceClass = "{$modelBasename}Resource";
@@ -81,6 +84,10 @@ class MakeResourceCommand extends Command
             'edit' => $panel->getPagesDirectory()."/{$pluralStudly}/Edit.vue",
         ];
 
+        if ($wantsView) {
+            $targets['show'] = $panel->getPagesDirectory()."/{$pluralStudly}/Show.vue";
+        }
+
         if (! $this->option('force')) {
             $existing = array_filter($targets, fn (string $path) => $this->files->exists($path));
 
@@ -94,7 +101,7 @@ class MakeResourceCommand extends Command
             }
         }
 
-        $this->writeResource($panel, $targets['resource'], $resourceClass, $modelClass);
+        $this->writeResource($panel, $targets['resource'], $resourceClass, $modelClass, $wantsView);
         $this->writeRequest($panel, $targets['request'], $requestClass, $fields);
         $this->writeController($panel, $targets['controller'], [
             'controllerClass' => $controllerClass,
@@ -106,6 +113,7 @@ class MakeResourceCommand extends Command
             'modelVariable' => $modelVariable,
             'indexRouteName' => "{$routeNamePrefix}.index",
             'fields' => $fields,
+            'wantsView' => $wantsView,
         ]);
         $this->writeIndexPage($targets['index'], [
             'tableProp' => $tableProp,
@@ -133,6 +141,18 @@ class MakeResourceCommand extends Command
             'fields' => $fields,
         ]);
 
+        if ($wantsView) {
+            $this->writeShowPage($targets['show'], [
+                'modelLabel' => Str::headline($modelBasename),
+                'navigationLabel' => Str::plural(Str::headline($modelBasename)),
+                'indexUrl' => $baseUrl,
+                'editUrlBase' => $baseUrl,
+                'primaryKey' => $model->getKeyName(),
+                'modelVariable' => $modelVariable,
+                'fields' => $fields,
+            ]);
+        }
+
         $this->components->info("Invue resource [{$modelBasename}] scaffolded into panel [{$panel->getId()}] from ".count($fields).' inferred field(s):');
         foreach ($targets as $path) {
             $this->line('  '.str_replace(base_path().'/', '', $path));
@@ -140,7 +160,40 @@ class MakeResourceCommand extends Command
         $this->line('');
         $this->line("Visit /{$panel->getPath()}/{$slug} once you're logged in — no route wiring needed, the panel discovers this Resource by directory convention.");
 
+        if (! $wantsView && class_exists(InfolistsServiceProvider::class)) {
+            $this->line('Re-run with --view to also scaffold a read-only Show (Infolist) page.');
+        }
+
         return self::SUCCESS;
+    }
+
+    /**
+     * `--view` short-circuits the prompt; otherwise ask, defaulting to no —
+     * matches Filament's own posture of List/Create/Edit by default, View
+     * as an opt-in extra. Silently false with no prompt at all when
+     * invue/infolists isn't installed (nothing to generate into) or the
+     * run is non-interactive (CI, --no-interaction) — never block on a
+     * question nobody can answer.
+     */
+    protected function resolveWantsView(): bool
+    {
+        if (! class_exists(InfolistsServiceProvider::class)) {
+            if ($this->option('view')) {
+                $this->components->warn('--view requires invue/infolists — install it first (`composer require invue/infolists`), then re-run.');
+            }
+
+            return false;
+        }
+
+        if ($this->option('view')) {
+            return true;
+        }
+
+        if (! $this->input->isInteractive()) {
+            return false;
+        }
+
+        return $this->confirm('Also generate a read-only view (Infolist) page?', false);
     }
 
     protected function resolvePanel(PanelManager $manager): ?Panel
@@ -176,13 +229,14 @@ class MakeResourceCommand extends Command
         return $class;
     }
 
-    protected function writeResource(Panel $panel, string $path, string $resourceClass, string $modelClass): void
+    protected function writeResource(Panel $panel, string $path, string $resourceClass, string $modelClass, bool $hasView): void
     {
         $stub = strtr($this->stub('resource'), [
             '{{ resourceNamespace }}' => $panel->getResourcesNamespace(),
             '{{ modelFqcn }}' => $modelClass,
             '{{ modelClass }}' => class_basename($modelClass),
             '{{ resourceClass }}' => $resourceClass,
+            '{{ hasViewProperty }}' => $hasView ? "\n    protected static bool \$hasView = true;\n" : '',
         ]);
 
         $this->put($path, $stub);
@@ -205,7 +259,7 @@ class MakeResourceCommand extends Command
     }
 
     /**
-     * @param  array{controllerClass: string, modelClass: string, requestClass: string, requestsNamespace: string, pageBase: string, tableProp: string, modelVariable: string, indexRouteName: string, fields: list<FieldDescriptor>}  $data
+     * @param  array{controllerClass: string, modelClass: string, requestClass: string, requestsNamespace: string, pageBase: string, tableProp: string, modelVariable: string, indexRouteName: string, fields: list<FieldDescriptor>, wantsView: bool}  $data
      */
     protected function writeController(Panel $panel, string $path, array $data): void
     {
@@ -235,6 +289,10 @@ class MakeResourceCommand extends Command
             ? "        Notification::make()\n            ->title('{$message}')\n            ->success()\n            ->send();\n"
             : '';
 
+        $showMethod = $data['wantsView']
+            ? "\n    public function show({$modelBasename} \${$data['modelVariable']}): Response\n    {\n        return Inertia::render('{$data['pageBase']}/Show', [\n            '{$data['modelVariable']}' => \${$data['modelVariable']},\n        ]);\n    }\n"
+            : '';
+
         $stub = strtr($this->stub('controller'), [
             '{{ controllersNamespace }}' => $panel->getControllersNamespace(),
             '{{ modelUse }}' => "use {$data['modelClass']};",
@@ -253,6 +311,7 @@ class MakeResourceCommand extends Command
             '{{ createdNotification }}' => $notificationCall("{$modelLabel} created"),
             '{{ updatedNotification }}' => $notificationCall("{$modelLabel} updated"),
             '{{ deletedNotification }}' => $notificationCall("{$modelLabel} deleted"),
+            '{{ showMethod }}' => $showMethod,
         ]);
 
         $this->put($path, $stub);
@@ -322,6 +381,34 @@ class MakeResourceCommand extends Command
             '%%FORM_INITIAL_FROM_MODEL%%' => implode("\n", array_map(fn ($f) => "    {$f->name}: props.{$modelVariable}.{$f->name},", $fields)),
             '%%FORM_FIELD_BINDINGS%%' => $this->fieldBindings($fields),
             '%%FORM_FIELDS%%' => implode("\n", array_map(fn ($f) => '            '.FieldRenderer::formField($f), $fields)),
+        ]);
+
+        $this->put($path, $stub);
+    }
+
+    /**
+     * @param  array{modelLabel: string, navigationLabel: string, indexUrl: string, editUrlBase: string, primaryKey: string, modelVariable: string, fields: list<FieldDescriptor>}  $data
+     */
+    protected function writeShowPage(string $path, array $data): void
+    {
+        $fields = $data['fields'];
+        $modelVariable = $data['modelVariable'];
+
+        $tableImports = array_unique(array_map(FieldRenderer::infolistEntryImport(...), $fields));
+        $entries = implode("\n", array_map(
+            fn (FieldDescriptor $f) => '                '.FieldRenderer::infolistEntry($f, "props.{$modelVariable}"),
+            $fields,
+        ));
+
+        $stub = strtr($this->stub('show.vue'), [
+            '%%TABLE_IMPORTS%%' => implode(', ', $tableImports),
+            '%%MODEL_VARIABLE%%' => $modelVariable,
+            '%%NAVIGATION_LABEL%%' => $data['navigationLabel'],
+            '%%INDEX_URL%%' => $data['indexUrl'],
+            '%%MODEL_LABEL%%' => $data['modelLabel'],
+            '%%EDIT_URL_BASE%%' => $data['editUrlBase'],
+            '%%PRIMARY_KEY%%' => $data['primaryKey'],
+            '%%INFOLIST_ENTRIES%%' => $entries,
         ]);
 
         $this->put($path, $stub);

@@ -35,7 +35,7 @@ class {{ controllerClass }} extends Controller
 {{ createdNotification }}
         return to_route('{{ indexRouteName }}');
     }
-
+{{ showMethod }}
     public function edit({{ modelClass }} ${{ modelVariable }}): Response
     {
         return Inertia::render('{{ pageBase }}/Edit', [

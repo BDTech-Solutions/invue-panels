@@ -23,6 +23,15 @@ abstract class Resource
 
     protected static ?string $navigationBadgeColor = 'gray';
 
+    /**
+     * Set by a generated Resource when make:invue-resource scaffolded a
+     * read-only Show (Infolist) page alongside it — PanelManager uses this
+     * to decide whether the `show` resource route is actually reachable
+     * for this Resource. False by default: a plain Resource has no
+     * Controller::show() to route to.
+     */
+    protected static bool $hasView = false;
+
     public static function getModel(): string
     {
         return static::$model;
@@ -73,6 +82,11 @@ abstract class Resource
     public static function getNavigationBadgeColor(): string
     {
         return static::$navigationBadgeColor ?? 'gray';
+    }
+
+    public static function hasView(): bool
+    {
+        return static::$hasView;
     }
 
     /**

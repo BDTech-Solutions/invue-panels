@@ -1,0 +1,38 @@
+<script setup>
+import { %%TABLE_IMPORTS%% } from 'invue/tables'
+import { Infolist, Entry, Section } from 'invue/infolists'
+import { PanelLayout } from 'invue/panels'
+import { Link } from '@inertiajs/vue3'
+
+const props = defineProps({
+    %%MODEL_VARIABLE%%: {
+        type: Object,
+        required: true,
+    },
+})
+
+const breadcrumbs = [
+    { label: '%%NAVIGATION_LABEL%%', url: '%%INDEX_URL%%' },
+    { label: `%%MODEL_LABEL%% #${props.%%MODEL_VARIABLE%%.%%PRIMARY_KEY%%}` },
+]
+</script>
+
+<template>
+    <PanelLayout :breadcrumbs="breadcrumbs">
+        <div class="mb-6 flex items-center justify-between">
+            <h1 class="text-xl font-semibold text-gray-900">%%MODEL_LABEL%% #{{ props.%%MODEL_VARIABLE%%.%%PRIMARY_KEY%% }}</h1>
+            <Link
+                :href="`%%EDIT_URL_BASE%%/${props.%%MODEL_VARIABLE%%.%%PRIMARY_KEY%%}/edit`"
+                class="rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-green-500"
+            >
+                Edit
+            </Link>
+        </div>
+
+        <Section>
+            <Infolist :columns="2">
+%%INFOLIST_ENTRIES%%
+            </Infolist>
+        </Section>
+    </PanelLayout>
+</template>
