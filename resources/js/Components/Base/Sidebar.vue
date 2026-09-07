@@ -11,16 +11,16 @@ import { Icon } from 'invue/core'
 // through a prop can never resolve to a real class — only a name looked up
 // against a map whose values are already static text in this file can.
 const ACTIVE_ITEM_CLASSES = {
-    gray: 'bg-gray-100 text-gray-900',
-    red: 'bg-red-50 text-red-700',
-    green: 'bg-green-50 text-green-700',
-    blue: 'bg-blue-50 text-blue-700',
-    yellow: 'bg-yellow-50 text-yellow-700',
-    amber: 'bg-amber-50 text-amber-700',
-    sky: 'bg-sky-50 text-sky-700',
-    rose: 'bg-rose-50 text-rose-700',
-    purple: 'bg-purple-50 text-purple-700',
-    pink: 'bg-pink-50 text-pink-700',
+    gray: 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100',
+    red: 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300',
+    green: 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300',
+    blue: 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300',
+    yellow: 'bg-yellow-50 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300',
+    amber: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300',
+    sky: 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300',
+    rose: 'bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300',
+    purple: 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300',
+    pink: 'bg-pink-50 text-pink-700 dark:bg-pink-950 dark:text-pink-300',
 }
 
 const WIDTH_CLASSES = {
@@ -30,19 +30,19 @@ const WIDTH_CLASSES = {
 }
 
 const BADGE_CLASSES = {
-    gray: 'bg-gray-100 text-gray-600',
-    red: 'bg-red-100 text-red-700',
-    green: 'bg-green-100 text-green-700',
-    blue: 'bg-blue-100 text-blue-700',
-    yellow: 'bg-yellow-100 text-yellow-700',
-    amber: 'bg-amber-100 text-amber-700',
-    sky: 'bg-sky-100 text-sky-700',
-    rose: 'bg-rose-100 text-rose-700',
-    purple: 'bg-purple-100 text-purple-700',
-    pink: 'bg-pink-100 text-pink-700',
+    gray: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300',
+    red: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
+    green: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
+    blue: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+    yellow: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300',
+    amber: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
+    sky: 'bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300',
+    rose: 'bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300',
+    purple: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
+    pink: 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300',
 }
 
-const INACTIVE_ITEM_CLASSES = 'text-gray-600 hover:bg-gray-50'
+const INACTIVE_ITEM_CLASSES = 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800'
 
 const props = defineProps({
     // Overrides page.props.invuePanel.navigation — lets a Sidebar be used
@@ -136,17 +136,17 @@ function isActive(url) {
 
 <template>
     <aside
-        class="invue-sidebar flex shrink-0 flex-col border-r border-gray-200 bg-white"
+        class="invue-sidebar flex shrink-0 flex-col border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
         :class="WIDTH_CLASSES[width] ?? WIDTH_CLASSES.md"
     >
-        <div class="flex h-14 shrink-0 items-center gap-2 border-b border-gray-200 px-4 text-base font-semibold text-gray-900">
+        <div class="flex h-14 shrink-0 items-center gap-2 border-b border-gray-200 px-4 text-base font-semibold text-gray-900 dark:border-gray-800 dark:text-gray-100">
             <slot name="brand">
                 <img v-if="brandLogoUrl" :src="brandLogoUrl" alt="" class="h-6 w-6 rounded" />
                 <span class="truncate">{{ brandName }}</span>
             </slot>
         </div>
 
-        <div v-if="$slots.header" class="border-b border-gray-200 px-4 py-3">
+        <div v-if="$slots.header" class="border-b border-gray-200 px-4 py-3 dark:border-gray-800">
             <slot name="header" />
         </div>
 
@@ -154,7 +154,7 @@ function isActive(url) {
             <template v-for="bucket in groupedNavigation" :key="bucket.group ?? '__ungrouped'">
                 <p
                     v-if="bucket.group"
-                    class="mt-4 mb-1 px-3 text-xs font-semibold tracking-wide text-gray-400 uppercase first:mt-0"
+                    class="mt-4 mb-1 px-3 text-xs font-semibold tracking-wide text-gray-400 uppercase first:mt-0 dark:text-gray-500"
                 >
                     {{ bucket.group }}
                 </p>
@@ -186,7 +186,7 @@ function isActive(url) {
             </template>
         </nav>
 
-        <div v-if="$slots.footer" class="border-t border-gray-200 px-2 py-3">
+        <div v-if="$slots.footer" class="border-t border-gray-200 px-2 py-3 dark:border-gray-800">
             <slot name="footer" />
         </div>
     </aside>

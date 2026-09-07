@@ -34,7 +34,7 @@ defineProps({
 </script>
 
 <template>
-    <div class="invue-panel flex min-h-screen bg-gray-50">
+    <div class="invue-panel flex min-h-screen bg-gray-50 dark:bg-gray-950">
         <Sidebar />
 
         <div class="flex flex-1 flex-col">

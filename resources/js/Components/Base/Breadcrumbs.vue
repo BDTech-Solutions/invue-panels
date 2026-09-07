@@ -17,16 +17,16 @@ defineProps({
 <template>
     <nav v-if="items.length" aria-label="Breadcrumb" class="flex min-w-0 items-center text-sm">
         <template v-for="(item, index) in items" :key="index">
-            <span v-if="index > 0" class="mx-1.5 shrink-0 text-gray-300">/</span>
+            <span v-if="index > 0" class="mx-1.5 shrink-0 text-gray-300 dark:text-gray-700">/</span>
 
             <Link
                 v-if="item.url && index < items.length - 1"
                 :href="item.url"
-                class="shrink-0 text-gray-500 hover:text-gray-700"
+                class="shrink-0 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
                 {{ item.label }}
             </Link>
-            <span v-else class="truncate font-medium text-gray-900">{{ item.label }}</span>
+            <span v-else class="truncate font-medium text-gray-900 dark:text-gray-100">{{ item.label }}</span>
         </template>
     </nav>
 </template>

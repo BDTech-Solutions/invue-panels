@@ -2,35 +2,36 @@
 import { computed, inject } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import { InvueRegistryKey } from 'invue/core'
+import ThemeToggle from '../ThemeToggle.vue'
 
 // Same reasoning as Base/Sidebar.vue's ACTIVE_ITEM_CLASSES/WIDTH_CLASSES —
 // a color name resolved through a static map here, not an arbitrary
 // string, since Tailwind only scans literal class text already present in
 // vendor/invue/**/*.vue.
 const ACCENT_BORDER_CLASSES = {
-    gray: 'border-gray-200',
-    red: 'border-red-300',
-    green: 'border-green-300',
-    blue: 'border-blue-300',
-    yellow: 'border-yellow-300',
-    amber: 'border-amber-300',
-    sky: 'border-sky-300',
-    rose: 'border-rose-300',
-    purple: 'border-purple-300',
-    pink: 'border-pink-300',
+    gray: 'border-gray-200 dark:border-gray-800',
+    red: 'border-red-300 dark:border-red-800',
+    green: 'border-green-300 dark:border-green-800',
+    blue: 'border-blue-300 dark:border-blue-800',
+    yellow: 'border-yellow-300 dark:border-yellow-800',
+    amber: 'border-amber-300 dark:border-amber-800',
+    sky: 'border-sky-300 dark:border-sky-800',
+    rose: 'border-rose-300 dark:border-rose-800',
+    purple: 'border-purple-300 dark:border-purple-800',
+    pink: 'border-pink-300 dark:border-pink-800',
 }
 
 const BADGE_CLASSES = {
-    gray: 'bg-gray-100 text-gray-600',
-    red: 'bg-red-100 text-red-700',
-    green: 'bg-green-100 text-green-700',
-    blue: 'bg-blue-100 text-blue-700',
-    yellow: 'bg-yellow-100 text-yellow-700',
-    amber: 'bg-amber-100 text-amber-700',
-    sky: 'bg-sky-100 text-sky-700',
-    rose: 'bg-rose-100 text-rose-700',
-    purple: 'bg-purple-100 text-purple-700',
-    pink: 'bg-pink-100 text-pink-700',
+    gray: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300',
+    red: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
+    green: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
+    blue: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+    yellow: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300',
+    amber: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
+    sky: 'bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300',
+    rose: 'bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300',
+    purple: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
+    pink: 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300',
 }
 
 const props = defineProps({
@@ -121,7 +122,7 @@ function logout() {
 
 <template>
     <header
-        class="flex h-14 items-center gap-4 border-b bg-white px-6"
+        class="flex h-14 items-center gap-4 border-b bg-white px-6 dark:bg-gray-900"
         :class="ACCENT_BORDER_CLASSES[color] ?? ACCENT_BORDER_CLASSES.gray"
     >
         <!-- #brand replaces the logo+name block entirely; the default
@@ -129,7 +130,7 @@ function logout() {
              show-brand="false" (PanelLayout's default) skips this whole
              block, brand and all — see the `showBrand` prop above. -->
         <slot v-if="showBrand" name="brand">
-            <div class="flex shrink-0 items-center gap-2 text-base font-semibold text-gray-900">
+            <div class="flex shrink-0 items-center gap-2 text-base font-semibold text-gray-900 dark:text-gray-100">
                 <img v-if="logoUrl" :src="logoUrl" alt="" class="h-6 w-6 rounded" />
                 <span>{{ name }}</span>
                 <span
@@ -153,6 +154,8 @@ function logout() {
         <div class="flex shrink-0 items-center gap-3">
             <slot />
 
+            <ThemeToggle />
+
             <component :is="TopbarBell" v-if="TopbarBell" />
 
             <!-- Native <details>/<summary> disclosure, same interaction
@@ -160,21 +163,21 @@ function logout() {
                  state needed for a dropdown this simple. -->
             <details v-if="user" class="relative">
                 <summary
-                    class="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-full bg-gray-800 text-xs font-semibold text-white select-none"
+                    class="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-full bg-gray-800 text-xs font-semibold text-white select-none dark:bg-gray-700"
                     :title="user.name ?? user.email"
                 >
                     {{ initials }}
                 </summary>
 
-                <div class="absolute right-0 z-10 mt-1 w-48 overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
-                    <div class="border-b border-gray-100 px-3 py-2">
-                        <p class="truncate text-sm font-medium text-gray-900">{{ user.name ?? user.email }}</p>
-                        <p v-if="user.name" class="truncate text-xs text-gray-500">{{ user.email }}</p>
+                <div class="absolute right-0 z-10 mt-1 w-48 overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                    <div class="border-b border-gray-100 px-3 py-2 dark:border-gray-700">
+                        <p class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{{ user.name ?? user.email }}</p>
+                        <p v-if="user.name" class="truncate text-xs text-gray-500 dark:text-gray-400">{{ user.email }}</p>
                     </div>
 
                     <button
                         type="button"
-                        class="block w-full px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50"
+                        class="block w-full px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
                         @click="logout"
                     >
                         Log out

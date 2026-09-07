@@ -17,7 +17,15 @@ abstract class Resource
     /** @var class-string<Model> */
     protected static string $model;
 
-    protected static ?string $navigationIcon = null;
+    /**
+     * A generic "this nav item is a record listing" icon — matches
+     * `Page::$navigationIcon`'s reasoning: a freshly generated Resource is
+     * never a silently iconless Sidebar row. Resolved lazily by
+     * `Icon.vue`'s `@lucide/vue` fallback, same as any other icon name
+     * Invue emits — no registration needed for this to render. Override
+     * per Resource with a more specific icon when one fits better.
+     */
+    protected static ?string $navigationIcon = 'table';
 
     protected static ?string $navigationGroup = null;
 

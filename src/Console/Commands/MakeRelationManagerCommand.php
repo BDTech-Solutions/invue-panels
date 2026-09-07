@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Invue\Core\Console\Concerns\EnsuresFrontendBuild;
 use Invue\Notifications\NotificationsServiceProvider;
 use Invue\Panels\Console\Support\ColumnInference;
 use Invue\Panels\Console\Support\FieldDescriptor;
@@ -31,6 +32,8 @@ use RuntimeException;
  */
 class MakeRelationManagerCommand extends Command
 {
+    use EnsuresFrontendBuild;
+
     protected $signature = 'make:invue-relation-manager
         {parent : The parent model name, e.g. Post — must already have a make:invue-resource-generated Edit page}
         {relation : The hasMany relation method name on the parent model, e.g. comments}
@@ -184,6 +187,9 @@ class MakeRelationManagerCommand extends Command
         $this->line('  routes/web.php'.($routesWired ? '' : ' (already wired)'));
         $this->line('  '.$this->relative($panel->getControllersDirectory()."/{$parentBasename}Controller.php").($controllerPatched ? ' (patched)' : ' (see snippet above — could not confidently patch)'));
         $this->line('  '.$this->relative($panel->getPagesDirectory().'/'.Str::pluralStudly($parentBasename).'/Edit.vue').($vuePatched ? ' (patched)' : ' (see snippet above — could not confidently patch)'));
+
+        $this->line('');
+        $this->ensureFrontendBuilt();
 
         return self::SUCCESS;
     }

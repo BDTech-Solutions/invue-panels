@@ -5,6 +5,7 @@ namespace Invue\Panels\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
+use Invue\Core\Console\Concerns\EnsuresFrontendBuild;
 use Invue\Panels\Panel;
 use Invue\Panels\PanelManager;
 use RuntimeException;
@@ -18,6 +19,8 @@ use RuntimeException;
  */
 class MakePageCommand extends Command
 {
+    use EnsuresFrontendBuild;
+
     protected $signature = 'make:invue-page
         {name : The page name, e.g. Reports}
         {--panel= : The panel id to generate into (defaults to the only registered panel)}
@@ -69,6 +72,9 @@ class MakePageCommand extends Command
         }
         $this->line('');
         $this->line("Visit /{$panel->getPath()}/{$slug} once you're logged in — it's already in the sidebar, no route wiring needed, the panel discovers this page by directory convention.");
+
+        $this->line('');
+        $this->ensureFrontendBuilt();
 
         return self::SUCCESS;
     }

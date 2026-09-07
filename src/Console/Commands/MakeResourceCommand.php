@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Invue\Core\Console\Concerns\EnsuresFrontendBuild;
 use Invue\Infolists\InfolistsServiceProvider;
 use Invue\Notifications\NotificationsServiceProvider;
 use Invue\Panels\Console\Support\ColumnInference;
@@ -18,6 +19,8 @@ use RuntimeException;
 
 class MakeResourceCommand extends Command
 {
+    use EnsuresFrontendBuild;
+
     protected $signature = 'make:invue-resource
         {name : The resource name, e.g. Post — also the default model name}
         {--panel= : The panel id to generate into (defaults to the only registered panel)}
@@ -123,6 +126,7 @@ class MakeResourceCommand extends Command
             'editUrlBase' => $baseUrl,
             'primaryKey' => $model->getKeyName(),
             'fields' => $fields,
+            'wantsView' => $wantsView,
         ]);
         $this->writeCreatePage($targets['create'], [
             'modelLabel' => Str::headline($modelBasename),
@@ -163,6 +167,9 @@ class MakeResourceCommand extends Command
         if (! $wantsView && class_exists(InfolistsServiceProvider::class)) {
             $this->line('Re-run with --view to also scaffold a read-only Show (Infolist) page.');
         }
+
+        $this->line('');
+        $this->ensureFrontendBuilt();
 
         return self::SUCCESS;
     }
@@ -318,7 +325,7 @@ class MakeResourceCommand extends Command
     }
 
     /**
-     * @param  array{tableProp: string, navigationLabel: string, modelLabel: string, createUrl: string, editUrlBase: string, primaryKey: string, fields: list<FieldDescriptor>}  $data
+     * @param  array{tableProp: string, navigationLabel: string, modelLabel: string, createUrl: string, editUrlBase: string, primaryKey: string, fields: list<FieldDescriptor>, wantsView: bool}  $data
      */
     protected function writeIndexPage(string $path, array $data): void
     {
@@ -326,6 +333,13 @@ class MakeResourceCommand extends Command
 
         $tableImports = array_unique(array_merge(['Table', 'TextColumn', 'ActionsColumn'], array_map(FieldRenderer::tableColumnImport(...), $fields)));
         $tableColumns = implode("\n", array_map(fn ($f) => '            '.FieldRenderer::tableColumn($f), $fields));
+
+        // The show route only exists at all when --view generated it (see
+        // PanelManager::registerRoutes()'s hasView() check) — so this row
+        // action is exactly as conditional as the route it links to.
+        $viewAction = $data['wantsView']
+            ? "                    { label: 'View', icon: 'eye', url: `{$data['editUrlBase']}/\${row.{$data['primaryKey']}}` },\n"
+            : '';
 
         $stub = strtr($this->stub('index.vue'), [
             '%%TABLE_IMPORTS%%' => implode(', ', $tableImports),
@@ -336,6 +350,7 @@ class MakeResourceCommand extends Command
             '%%MODEL_LABEL%%' => $data['modelLabel'],
             '%%PRIMARY_KEY%%' => $data['primaryKey'],
             '%%TABLE_COLUMNS%%' => $tableColumns,
+            '%%VIEW_ACTION%%' => $viewAction,
         ]);
 
         $this->put($path, $stub);

@@ -10,7 +10,7 @@ const table = useInvueTable('%%TABLE_PROP%%')
 <template>
     <PanelLayout>
         <div class="mb-6 flex items-center justify-between">
-            <h1 class="text-xl font-semibold text-gray-900">%%NAVIGATION_LABEL%%</h1>
+            <h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">%%NAVIGATION_LABEL%%</h1>
             <Link
                 href="%%CREATE_URL%%"
                 class="rounded-md bg-green-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-green-500"
@@ -26,7 +26,7 @@ const table = useInvueTable('%%TABLE_PROP%%')
                 align="end"
                 trigger="inline"
                 :actions="(row) => [
-                    { label: 'Edit', icon: 'pencil', url: `%%EDIT_URL_BASE%%/${row.%%PRIMARY_KEY%%}/edit` },
+%%VIEW_ACTION%%                    { label: 'Edit', icon: 'pencil', url: `%%EDIT_URL_BASE%%/${row.%%PRIMARY_KEY%%}/edit` },
                     {
                         label: 'Delete',
                         icon: 'trash',

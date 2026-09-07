@@ -4,11 +4,11 @@ import { PanelLayout } from 'invue/panels'
 
 <template>
     <PanelLayout>
-        <h1 class="text-xl font-semibold text-gray-900">Dashboard</h1>
+        <h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Dashboard</h1>
 
-        <p class="mt-4 text-gray-600">
+        <p class="mt-4 text-gray-600 dark:text-gray-400">
             Add a resource with
-            <code class="rounded bg-gray-100 px-1.5 py-0.5">php artisan make:invue-resource {Model} --panel={{ id }}</code>
+            <code class="rounded bg-gray-100 px-1.5 py-0.5 dark:bg-gray-800">php artisan make:invue-resource {Model} --panel={{ id }}</code>
             to see it here.
         </p>
     </PanelLayout>

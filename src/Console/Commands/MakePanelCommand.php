@@ -5,9 +5,12 @@ namespace Invue\Panels\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
+use Invue\Core\Console\Concerns\EnsuresFrontendBuild;
 
 class MakePanelCommand extends Command
 {
+    use EnsuresFrontendBuild;
+
     protected $signature = 'make:invue-panel
         {name : The panel name, e.g. Admin}
         {--path= : URL path prefix, defaults to a kebab-case of the name}';
@@ -51,6 +54,9 @@ class MakePanelCommand extends Command
         $this->line('');
         $this->line('Add a Resource to this panel with:');
         $this->line("  <fg=green>php artisan make:invue-resource</> <ModelName> <fg=gray>--panel={$id}</>");
+
+        $this->line('');
+        $this->ensureFrontendBuilt();
 
         return self::SUCCESS;
     }
