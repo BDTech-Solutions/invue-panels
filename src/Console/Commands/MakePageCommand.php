@@ -42,6 +42,13 @@ class MakePageCommand extends Command
         }
 
         $name = Str::studly($this->argument('name'));
+
+        if (! preg_match('/^[A-Za-z][A-Za-z0-9]*$/', $name)) {
+            $this->components->error("Invalid page name: [{$this->argument('name')}]. Use only letters, numbers, spaces, dashes, or underscores.");
+
+            return self::FAILURE;
+        }
+
         $pageClass = "{$name}Page";
         $slug = Str::kebab($name);
 

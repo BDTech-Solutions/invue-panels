@@ -20,6 +20,13 @@ class MakePanelCommand extends Command
     public function handle(Filesystem $files): int
     {
         $name = Str::studly($this->argument('name'));
+
+        if (! preg_match('/^[A-Za-z][A-Za-z0-9]*$/', $name)) {
+            $this->components->error("Invalid panel name: [{$this->argument('name')}]. Use only letters, numbers, spaces, dashes, or underscores.");
+
+            return self::FAILURE;
+        }
+
         $id = Str::kebab($name);
         $path = ltrim((string) ($this->option('path') ?: $id), '/');
 
