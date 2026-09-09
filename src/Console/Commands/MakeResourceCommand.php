@@ -8,6 +8,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Invue\Core\Console\Concerns\EnsuresFrontendBuild;
+use ReflectionClass;
 use Invue\Infolists\InfolistsServiceProvider;
 use Invue\Notifications\NotificationsServiceProvider;
 use Invue\Panels\Console\Support\ColumnInference;
@@ -60,6 +61,8 @@ class MakeResourceCommand extends Command
 
         $fields = ColumnInference::forTable($table, $model->getKeyName());
         $wantsView = $this->resolveWantsView();
+
+        $this->ensureMassAssignable($model);
 
         $modelBasename = class_basename($modelClass);
         $resourceClass = "{$modelBasename}Resource";
@@ -234,6 +237,48 @@ class MakeResourceCommand extends Command
         }
 
         return $class;
+    }
+
+    /**
+     * The generated Controller calls {Model}::create()/->update() with the
+     * FormRequest's validated array — Eloquent refuses that outright on a
+     * fresh `make:model` result (no $fillable, no $guarded) with a
+     * MassAssignmentException, so a resource generated end-to-end against
+     * an untouched model can't actually create a record. Best-effort, same
+     * posture as the relation-manager patches: only touches a model that
+     * doesn't already declare either property, on the exact shape
+     * `make:model` writes; otherwise it says so and leaves the model alone
+     * rather than guessing against a file already edited by hand.
+     */
+    protected function ensureMassAssignable(Model $model): void
+    {
+        $path = (new ReflectionClass($model))->getFileName();
+
+        if ($path === false) {
+            return;
+        }
+
+        $contents = $this->files->get($path);
+
+        if (str_contains($contents, '$fillable') || str_contains($contents, '$guarded')) {
+            return;
+        }
+
+        $updated = preg_replace(
+            '/(class\s+'.preg_quote(class_basename($model), '/').'\b[^{]*\{\r?\n)/',
+            "$1    protected \$guarded = [];\n\n",
+            $contents,
+            limit: 1,
+        );
+
+        if ($updated === null || $updated === $contents) {
+            $this->components->warn('Add `protected $guarded = [\'id\'];` (or a real $fillable list) to '.$model::class.' — the generated Controller mass-assigns the validated request, which Eloquent refuses on a model with neither property set.');
+
+            return;
+        }
+
+        $this->files->put($path, $updated);
+        $this->components->info(class_basename($model).': added `protected $guarded = [];` — the generated Controller needs mass assignment allowed to create/update records.');
     }
 
     protected function writeResource(Panel $panel, string $path, string $resourceClass, string $modelClass, bool $hasView): void
